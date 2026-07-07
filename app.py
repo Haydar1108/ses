@@ -140,6 +140,34 @@ TEXTS = {
             "Используя приложение, вы работаете со своим собственным AWS-аккаунтом на свой страх и риск. "
             "Ключи не сохраняются и не логируются — они существуют только в памяти вашей текущей сессии."
         ),
+        "help_smtp": (
+            "**Как это работает:** введите ваш Access Key ID и Secret Access Key в поле выше, "
+            "выберите регион и нажмите «Конвертировать». Приложение локально вычислит SMTP-пароль "
+            "по официальному алгоритму AWS — никакого обращения к AWS API для этого не требуется. "
+            "Полученные SMTP Username/Password можно использовать в любом почтовом клиенте или "
+            "SMTP-библиотеке (например, PHPMailer, Nodemailer, smtplib) для отправки писем через SES."
+        ),
+        "help_domains": (
+            "**Как это работает:** введите email-адрес или домен и нажмите «Добавить» — SES начнёт "
+            "процесс верификации (для email придёт письмо со ссылкой, для домена вернутся DNS-записи "
+            "для добавления в DNS). Кнопка «Список всех» покажет все ранее добавленные домены и email "
+            "с их статусом верификации. Кнопка «Удалить» отвязывает identity от SES — при повторном "
+            "добавлении верификацию нужно будет пройти заново."
+        ),
+        "help_cname": (
+            "**Как это работает:** введите домен (для email эта вкладка не нужна — там верификация "
+            "идёт по ссылке в письме) и нажмите «Проверить статус», чтобы увидеть текущее состояние "
+            "верификации и DKIM. Кнопка «Показать CNAME» выведет все DNS-записи, которые нужно "
+            "добавить у регистратора домена — тип, имя и значение каждой записи. После добавления "
+            "записей верификация проходит автоматически, обычно от нескольких минут до пары часов."
+        ),
+        "help_limits": (
+            "**Как это работает:** нажмите «Обновить данные», чтобы увидеть текущую квоту отправки — "
+            "сколько писем можно отправить за 24 часа, сколько уже отправлено и сколько осталось. "
+            "Также показывается максимальная скорость отправки (писем в секунду) и включён ли "
+            "production-режим (если аккаунт всё ещё в sandbox — письма можно слать только на "
+            "верифицированные адреса)."
+        ),
         "no_creds_error": "Не удалось аутентифицироваться. Проверьте ключи.",
         "aws_error": "AWS ошибка",
         "generic_error": "Ошибка",
@@ -203,6 +231,32 @@ TEXTS = {
             "⚠️ Unofficial tool, not affiliated with Amazon Web Services. "
             "By using this app you operate on your own AWS account at your own risk. "
             "Keys are never stored or logged — they exist only in your current session's memory."
+        ),
+        "help_smtp": (
+            "**How it works:** enter your Access Key ID and Secret Access Key above, pick a region, "
+            "and click Convert. The app computes the SMTP password locally using AWS's official "
+            "algorithm — no AWS API call is made. Use the resulting SMTP Username/Password in any "
+            "email client or SMTP library (e.g. PHPMailer, Nodemailer, smtplib) to send mail through SES."
+        ),
+        "help_domains": (
+            "**How it works:** enter an email address or domain and click Add — SES starts the "
+            "verification process (an email gets a confirmation link, a domain returns DNS records "
+            "to add). The List all button shows every domain/email you've added along with its "
+            "verification status. Delete removes the identity from SES — verification has to be "
+            "redone if you add it again later."
+        ),
+        "help_cname": (
+            "**How it works:** enter a domain (this tab isn't needed for emails — those verify via "
+            "a link sent to the inbox) and click Check status to see the current verification and "
+            "DKIM state. Show CNAME lists every DNS record you need to add at your domain registrar — "
+            "type, name, and value for each. Verification completes automatically once the records "
+            "propagate, usually within minutes to a couple of hours."
+        ),
+        "help_limits": (
+            "**How it works:** click Refresh data to see your current sending quota — how many "
+            "emails you can send per 24 hours, how many you've already sent, and how many remain. "
+            "It also shows the maximum send rate (emails/sec) and whether production access is "
+            "enabled (while in sandbox mode, you can only send to verified addresses)."
         ),
         "no_creds_error": "Authentication failed. Check your keys.",
         "aws_error": "AWS error",
@@ -321,6 +375,7 @@ def main():
                     f"SMTP Endpoint: email-smtp.{region}.amazonaws.com\n"
                     f"Ports: 587 (STARTTLS) or 465 (SSL)"
                 )
+        st.info(t("help_smtp"))
 
     # --- Tab 2: domains and emails management ---
     with tab2:
@@ -389,6 +444,8 @@ def main():
                         st.write(f"{'✅' if verified else '❌'} {item.get('IdentityName')}")
                 run_action(action)
 
+        st.info(t("help_domains"))
+
     # --- Tab 3: CNAME records / verification status ---
     with tab3:
         st.subheader(t("cname_header"))
@@ -435,6 +492,8 @@ def main():
                         st.info(t("tokens_not_found"))
                 run_action(action)
 
+        st.info(t("help_cname"))
+
     # --- Tab 4: limits and stats ---
     with tab4:
         st.subheader(t("limits_header"))
@@ -459,6 +518,8 @@ def main():
                 production = response.get('ProductionAccessEnabled')
                 st.write(f"{t('production_mode')}: {'✅' if production else '❌ ' + t('sandbox')}")
             run_action(action)
+
+        st.info(t("help_limits"))
 
     st.divider()
     st.caption(t("footer"))
