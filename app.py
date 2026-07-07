@@ -56,30 +56,6 @@ def calculate_smtp_password(secret_access_key: str, region: str) -> str:
     return base64.b64encode(signature_and_version).decode("utf-8")
 
 
-# ---------- Password gate ----------
-
-def check_password() -> bool:
-    """Простая защита входа паролем через st.secrets."""
-    app_password = st.secrets.get("APP_PASSWORD", None)
-
-    if not app_password:
-        # Пароль не настроен в secrets — работаем без защиты (например, локально)
-        return True
-
-    if st.session_state.get("authenticated", False):
-        return True
-
-    st.title("🔒 Вход")
-    pwd = st.text_input("Пароль для доступа к приложению", type="password")
-    if st.button("Войти"):
-        if pwd == app_password:
-            st.session_state["authenticated"] = True
-            st.rerun()
-        else:
-            st.error("Неверный пароль")
-    return False
-
-
 # ---------- AWS client helper ----------
 
 def get_client(service, access_key, secret_key, region):
@@ -122,11 +98,12 @@ def run_action(func):
 def main():
     st.set_page_config(page_title="AWS SES Manager", page_icon="📧", layout="centered")
 
-    if not check_password():
-        return
-
     st.title("📧 AWS SES Manager")
-    st.caption("Работа с AWS SES через веб-интерфейс. Ключи используются только для текущей сессии и никуда не сохраняются.")
+    st.caption(
+        "Бесплатный инструмент для управления AWS SES. "
+        "Ваши AWS-ключи используются только в этой сессии браузера и нигде не сохраняются — "
+        "ни в коде приложения, ни на сервере. Не аффилирован с Amazon/AWS."
+    )
 
     with st.expander("🔑 Учётные данные AWS", expanded=True):
         access_key = st.text_input("Access Key ID", key="access_key")
@@ -295,6 +272,13 @@ def main():
                 st.write(f"Отправка включена: {'✅' if response.get('SendingEnabled') else '❌'}")
                 st.write(f"Production-режим: {'✅' if response.get('ProductionAccessEnabled') else '❌ (sandbox)'}")
             run_action(action)
+
+    st.divider()
+    st.caption(
+        "⚠️ Неофициальный инструмент, не связан с Amazon Web Services. "
+        "Используя приложение, вы работаете со своим собственным AWS-аккаунтом на свой страх и риск. "
+        "Ключи не сохраняются и не логируются — они существуют только в памяти вашей текущей сессии."
+    )
 
 
 if __name__ == "__main__":
