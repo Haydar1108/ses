@@ -256,7 +256,25 @@ def run_action(func):
 # ---------- Main app ----------
 
 def main():
-    st.set_page_config(page_title="AWS SES Manager", page_icon="📧", layout="centered")
+    st.set_page_config(page_title="AWS SES Manager", page_icon="📧", layout="wide")
+
+    st.markdown(
+        """
+        <style>
+        .block-container {
+            max-width: 1000px;
+            padding-left: 3rem;
+            padding-right: 3rem;
+            margin: 0 auto;
+        }
+        pre, code {
+            white-space: pre-wrap !important;
+            word-break: break-all !important;
+        }
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
 
     if "lang" not in st.session_state:
         st.session_state["lang"] = "ru"
