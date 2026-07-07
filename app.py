@@ -141,32 +141,40 @@ TEXTS = {
             "Ключи не сохраняются и не логируются — они существуют только в памяти вашей текущей сессии."
         ),
         "help_smtp": (
-            "**Как это работает:** введите ваш Access Key ID и Secret Access Key в поле выше, "
-            "выберите регион и нажмите «Конвертировать». Приложение локально вычислит SMTP-пароль "
-            "по официальному алгоритму AWS — никакого обращения к AWS API для этого не требуется. "
-            "Полученные SMTP Username/Password можно использовать в любом почтовом клиенте или "
-            "SMTP-библиотеке (например, PHPMailer, Nodemailer, smtplib) для отправки писем через SES."
+            "**Как это работает:**\n\n"
+            "1. Введите Access Key ID и Secret Access Key в поле выше.\n"
+            "2. Выберите регион.\n"
+            "3. Нажмите «Конвертировать».\n\n"
+            "Приложение локально вычислит SMTP-пароль по официальному алгоритму AWS — "
+            "никакого обращения к AWS API для этого не требуется.\n\n"
+            "Полученные SMTP Username/Password можно использовать в любом почтовом клиенте "
+            "или SMTP-библиотеке (например, PHPMailer, Nodemailer, smtplib) для отправки писем через SES."
         ),
         "help_domains": (
-            "**Как это работает:** введите email-адрес или домен и нажмите «Добавить» — SES начнёт "
-            "процесс верификации (для email придёт письмо со ссылкой, для домена вернутся DNS-записи "
-            "для добавления в DNS). Кнопка «Список всех» покажет все ранее добавленные домены и email "
-            "с их статусом верификации. Кнопка «Удалить» отвязывает identity от SES — при повторном "
-            "добавлении верификацию нужно будет пройти заново."
+            "**Как это работает:**\n\n"
+            "1. Введите email-адрес или домен.\n"
+            "2. Нажмите «Добавить» — SES начнёт процесс верификации:\n"
+            "   - для email придёт письмо со ссылкой подтверждения;\n"
+            "   - для домена вернутся DNS-записи для добавления в DNS.\n"
+            "3. Кнопка «Список всех» покажет все ранее добавленные домены и email с их статусом верификации.\n"
+            "4. Кнопка «Удалить» отвязывает identity от SES — при повторном добавлении верификацию нужно будет пройти заново."
         ),
         "help_cname": (
-            "**Как это работает:** введите домен (для email эта вкладка не нужна — там верификация "
-            "идёт по ссылке в письме) и нажмите «Проверить статус», чтобы увидеть текущее состояние "
-            "верификации и DKIM. Кнопка «Показать CNAME» выведет все DNS-записи, которые нужно "
-            "добавить у регистратора домена — тип, имя и значение каждой записи. После добавления "
-            "записей верификация проходит автоматически, обычно от нескольких минут до пары часов."
+            "**Как это работает:**\n\n"
+            "1. Введите домен (для email эта вкладка не нужна — там верификация идёт по ссылке в письме).\n"
+            "2. Нажмите «Проверить статус», чтобы увидеть текущее состояние верификации и DKIM.\n"
+            "3. Нажмите «Показать CNAME», чтобы получить все DNS-записи, которые нужно добавить у регистратора домена — тип, имя и значение каждой записи.\n\n"
+            "После добавления записей верификация проходит автоматически, обычно от нескольких минут до пары часов."
         ),
         "help_limits": (
-            "**Как это работает:** нажмите «Обновить данные», чтобы увидеть текущую квоту отправки — "
-            "сколько писем можно отправить за 24 часа, сколько уже отправлено и сколько осталось. "
-            "Также показывается максимальная скорость отправки (писем в секунду) и включён ли "
-            "production-режим (если аккаунт всё ещё в sandbox — письма можно слать только на "
-            "верифицированные адреса)."
+            "**Как это работает:**\n\n"
+            "1. Нажмите «Обновить данные».\n\n"
+            "Вы увидите:\n"
+            "- сколько писем можно отправить за 24 часа;\n"
+            "- сколько уже отправлено;\n"
+            "- сколько осталось;\n"
+            "- максимальную скорость отправки (писем в секунду);\n"
+            "- включён ли production-режим (если аккаунт всё ещё в sandbox — письма можно слать только на верифицированные адреса)."
         ),
         "no_creds_error": "Не удалось аутентифицироваться. Проверьте ключи.",
         "aws_error": "AWS ошибка",
@@ -233,30 +241,40 @@ TEXTS = {
             "Keys are never stored or logged — they exist only in your current session's memory."
         ),
         "help_smtp": (
-            "**How it works:** enter your Access Key ID and Secret Access Key above, pick a region, "
-            "and click Convert. The app computes the SMTP password locally using AWS's official "
-            "algorithm — no AWS API call is made. Use the resulting SMTP Username/Password in any "
-            "email client or SMTP library (e.g. PHPMailer, Nodemailer, smtplib) to send mail through SES."
+            "**How it works:**\n\n"
+            "1. Enter your Access Key ID and Secret Access Key above.\n"
+            "2. Pick a region.\n"
+            "3. Click Convert.\n\n"
+            "The app computes the SMTP password locally using AWS's official algorithm — "
+            "no AWS API call is made.\n\n"
+            "Use the resulting SMTP Username/Password in any email client or SMTP library "
+            "(e.g. PHPMailer, Nodemailer, smtplib) to send mail through SES."
         ),
         "help_domains": (
-            "**How it works:** enter an email address or domain and click Add — SES starts the "
-            "verification process (an email gets a confirmation link, a domain returns DNS records "
-            "to add). The List all button shows every domain/email you've added along with its "
-            "verification status. Delete removes the identity from SES — verification has to be "
-            "redone if you add it again later."
+            "**How it works:**\n\n"
+            "1. Enter an email address or domain.\n"
+            "2. Click Add — SES starts the verification process:\n"
+            "   - for an email, a confirmation link is sent to the inbox;\n"
+            "   - for a domain, DNS records are returned for you to add.\n"
+            "3. The List all button shows every domain/email you've added along with its verification status.\n"
+            "4. Delete removes the identity from SES — verification has to be redone if you add it again later."
         ),
         "help_cname": (
-            "**How it works:** enter a domain (this tab isn't needed for emails — those verify via "
-            "a link sent to the inbox) and click Check status to see the current verification and "
-            "DKIM state. Show CNAME lists every DNS record you need to add at your domain registrar — "
-            "type, name, and value for each. Verification completes automatically once the records "
-            "propagate, usually within minutes to a couple of hours."
+            "**How it works:**\n\n"
+            "1. Enter a domain (this tab isn't needed for emails — those verify via a link sent to the inbox).\n"
+            "2. Click Check status to see the current verification and DKIM state.\n"
+            "3. Click Show CNAME to list every DNS record you need to add at your domain registrar — type, name, and value for each.\n\n"
+            "Verification completes automatically once the records propagate, usually within minutes to a couple of hours."
         ),
         "help_limits": (
-            "**How it works:** click Refresh data to see your current sending quota — how many "
-            "emails you can send per 24 hours, how many you've already sent, and how many remain. "
-            "It also shows the maximum send rate (emails/sec) and whether production access is "
-            "enabled (while in sandbox mode, you can only send to verified addresses)."
+            "**How it works:**\n\n"
+            "1. Click Refresh data.\n\n"
+            "You'll see:\n"
+            "- how many emails you can send per 24 hours;\n"
+            "- how many you've already sent;\n"
+            "- how many remain;\n"
+            "- the maximum send rate (emails/sec);\n"
+            "- whether production access is enabled (while in sandbox mode, you can only send to verified addresses)."
         ),
         "no_creds_error": "Authentication failed. Check your keys.",
         "aws_error": "AWS error",
