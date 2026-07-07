@@ -1,25 +1,11 @@
 """
-AWS SES Manager — веб-версия на Streamlit.
+AWS SES Manager — веб-версия на Streamlit (RU/EN).
 
 Запуск локально:
     pip install -r requirements.txt
     streamlit run app.py
-
-Деплой в облако (Streamlit Community Cloud):
-    1. Залить этот проект в приватный репозиторий на GitHub.
-    2. Зайти на https://share.streamlit.io, подключить репозиторий.
-    3. В настройках приложения (Settings -> Secrets) добавить:
-       APP_PASSWORD = "ваш_пароль_для_входа_в_приложение"
-    4. Deploy — получите публичную ссылку на приложение.
-
-Важно: сам AWS Access Key/Secret Key нигде не сохраняется — вводится
-заново в каждой сессии браузера и используется только для прямых
-запросов к AWS API. APP_PASSWORD — это отдельный пароль, защищающий
-сам вход в веб-интерфейс, чтобы им не мог воспользоваться кто угодно
-по ссылке.
 """
 
-import json
 import hmac as hmac_lib
 import hashlib
 import base64
@@ -56,14 +42,191 @@ def calculate_smtp_password(secret_access_key: str, region: str) -> str:
     return base64.b64encode(signature_and_version).decode("utf-8")
 
 
+# ---------- AWS regions (commercial partition) ----------
+# Формат: (код региона, человекочитаемое имя)
+AWS_REGIONS = [
+    ("us-east-1", "US East (N. Virginia)"),
+    ("us-east-2", "US East (Ohio)"),
+    ("us-west-1", "US West (N. California)"),
+    ("us-west-2", "US West (Oregon)"),
+    ("af-south-1", "Africa (Cape Town)"),
+    ("ap-east-1", "Asia Pacific (Hong Kong)"),
+    ("ap-south-1", "Asia Pacific (Mumbai)"),
+    ("ap-south-2", "Asia Pacific (Hyderabad)"),
+    ("ap-northeast-1", "Asia Pacific (Tokyo)"),
+    ("ap-northeast-2", "Asia Pacific (Seoul)"),
+    ("ap-northeast-3", "Asia Pacific (Osaka)"),
+    ("ap-southeast-1", "Asia Pacific (Singapore)"),
+    ("ap-southeast-2", "Asia Pacific (Sydney)"),
+    ("ap-southeast-3", "Asia Pacific (Jakarta)"),
+    ("ap-southeast-4", "Asia Pacific (Melbourne)"),
+    ("ca-central-1", "Canada (Central)"),
+    ("ca-west-1", "Canada West (Calgary)"),
+    ("eu-central-1", "Europe (Frankfurt)"),
+    ("eu-central-2", "Europe (Zurich)"),
+    ("eu-west-1", "Europe (Ireland)"),
+    ("eu-west-2", "Europe (London)"),
+    ("eu-west-3", "Europe (Paris)"),
+    ("eu-north-1", "Europe (Stockholm)"),
+    ("eu-south-1", "Europe (Milan)"),
+    ("eu-south-2", "Europe (Spain)"),
+    ("me-south-1", "Middle East (Bahrain)"),
+    ("me-central-1", "Middle East (UAE)"),
+    ("il-central-1", "Israel (Tel Aviv)"),
+    ("sa-east-1", "South America (São Paulo)"),
+]
+
+REGION_LABELS = [f"{code} — {name}" for code, name in AWS_REGIONS]
+REGION_CODE_BY_LABEL = {f"{code} — {name}": code for code, name in AWS_REGIONS}
+
+
+# ---------- Translations ----------
+
+TEXTS = {
+    "ru": {
+        "title": "📧 AWS SES Manager",
+        "subtitle": (
+            "Бесплатный инструмент для управления AWS SES. "
+            "Ваши AWS-ключи используются только в этой сессии браузера и нигде не сохраняются — "
+            "ни в коде приложения, ни на сервере. Не аффилирован с Amazon/AWS."
+        ),
+        "credentials_header": "🔑 Учётные данные AWS",
+        "access_key": "Access Key ID",
+        "secret_key": "Secret Access Key",
+        "region": "Регион",
+        "tab_smtp": "🔁 SMTP-пароль",
+        "tab_domains": "🌐 Домены и email",
+        "tab_cname": "🔍 CNAME / Статус",
+        "tab_limits": "📊 Лимиты",
+        "smtp_header": "Конвертировать текущий ключ в SMTP",
+        "smtp_caption": "Вычисляется локально, без обращения к AWS API.",
+        "convert_btn": "Конвертировать",
+        "enter_keys_warn": "Введите Access Key ID и Secret Access Key выше.",
+        "done": "Готово:",
+        "domains_header": "Управление доменами и email",
+        "identity_label": "Email или домен",
+        "add_btn": "➕ Добавить",
+        "delete_btn": "🗑 Удалить",
+        "list_btn": "📋 Список всех",
+        "enter_identity_warn": "Введите email или домен.",
+        "domain_added": "Домен добавлен. Добавьте следующие DNS-записи:",
+        "email_added": "Email добавлен. Проверьте почту и перейдите по ссылке подтверждения.",
+        "tokens_delayed": "Токены не пришли сразу — проверьте статус чуть позже.",
+        "enter_identity_delete_warn": "Введите email или домен для удаления.",
+        "deleted": "удалён из SES.",
+        "nothing_attached": "Ничего не привязано.",
+        "domains_count": "🌐 Домены",
+        "emails_count": "📧 Email-адреса",
+        "cname_header": "Статус верификации и CNAME-записи",
+        "identity_label2": "Домен или email",
+        "check_status_btn": "✅ Проверить статус",
+        "show_cname_btn": "🔍 Показать CNAME",
+        "verified_sending": "Верифицирован для отправки",
+        "yes": "да",
+        "no": "нет",
+        "dkim_status": "DKIM статус",
+        "cname_only_domains": "CNAME нужны только для доменов, не для email.",
+        "tokens_not_found": "Токены не найдены — сначала добавьте домен.",
+        "limits_header": "Лимиты и статистика отправки",
+        "update_btn": "📊 Обновить данные",
+        "limit_24h": "Лимит за 24ч",
+        "sent": "Отправлено",
+        "remaining": "Осталось",
+        "max_rate": "Макс. скорость",
+        "per_sec": "писем/сек",
+        "sending_enabled": "Отправка включена",
+        "production_mode": "Production-режим",
+        "sandbox": "(sandbox)",
+        "footer": (
+            "⚠️ Неофициальный инструмент, не связан с Amazon Web Services. "
+            "Используя приложение, вы работаете со своим собственным AWS-аккаунтом на свой страх и риск. "
+            "Ключи не сохраняются и не логируются — они существуют только в памяти вашей текущей сессии."
+        ),
+        "no_creds_error": "Не удалось аутентифицироваться. Проверьте ключи.",
+        "aws_error": "AWS ошибка",
+        "generic_error": "Ошибка",
+        "boto3_missing": "boto3 не установлен. Добавьте его в requirements.txt",
+    },
+    "en": {
+        "title": "📧 AWS SES Manager",
+        "subtitle": (
+            "A free tool for managing AWS SES. "
+            "Your AWS keys are used only within this browser session and are never stored — "
+            "not in the app code, not on the server. Not affiliated with Amazon/AWS."
+        ),
+        "credentials_header": "🔑 AWS Credentials",
+        "access_key": "Access Key ID",
+        "secret_key": "Secret Access Key",
+        "region": "Region",
+        "tab_smtp": "🔁 SMTP Password",
+        "tab_domains": "🌐 Domains & Emails",
+        "tab_cname": "🔍 CNAME / Status",
+        "tab_limits": "📊 Limits",
+        "smtp_header": "Convert current key to SMTP",
+        "smtp_caption": "Calculated locally, no AWS API call involved.",
+        "convert_btn": "Convert",
+        "enter_keys_warn": "Enter Access Key ID and Secret Access Key above.",
+        "done": "Done:",
+        "domains_header": "Manage domains and emails",
+        "identity_label": "Email or domain",
+        "add_btn": "➕ Add",
+        "delete_btn": "🗑 Delete",
+        "list_btn": "📋 List all",
+        "enter_identity_warn": "Enter an email or domain.",
+        "domain_added": "Domain added. Add the following DNS records:",
+        "email_added": "Email added. Check your inbox and click the confirmation link.",
+        "tokens_delayed": "Tokens didn't arrive immediately — check status again shortly.",
+        "enter_identity_delete_warn": "Enter an email or domain to delete.",
+        "deleted": "removed from SES.",
+        "nothing_attached": "Nothing attached yet.",
+        "domains_count": "🌐 Domains",
+        "emails_count": "📧 Email addresses",
+        "cname_header": "Verification status and CNAME records",
+        "identity_label2": "Domain or email",
+        "check_status_btn": "✅ Check status",
+        "show_cname_btn": "🔍 Show CNAME",
+        "verified_sending": "Verified for sending",
+        "yes": "yes",
+        "no": "no",
+        "dkim_status": "DKIM status",
+        "cname_only_domains": "CNAME records are only needed for domains, not emails.",
+        "tokens_not_found": "Tokens not found — add the domain first.",
+        "limits_header": "Sending limits and statistics",
+        "update_btn": "📊 Refresh data",
+        "limit_24h": "24h limit",
+        "sent": "Sent",
+        "remaining": "Remaining",
+        "max_rate": "Max rate",
+        "per_sec": "emails/sec",
+        "sending_enabled": "Sending enabled",
+        "production_mode": "Production mode",
+        "sandbox": "(sandbox)",
+        "footer": (
+            "⚠️ Unofficial tool, not affiliated with Amazon Web Services. "
+            "By using this app you operate on your own AWS account at your own risk. "
+            "Keys are never stored or logged — they exist only in your current session's memory."
+        ),
+        "no_creds_error": "Authentication failed. Check your keys.",
+        "aws_error": "AWS error",
+        "generic_error": "Error",
+        "boto3_missing": "boto3 is not installed. Add it to requirements.txt",
+    },
+}
+
+
+def t(key):
+    lang = st.session_state.get("lang", "ru")
+    return TEXTS[lang].get(key, key)
+
+
 # ---------- AWS client helper ----------
 
 def get_client(service, access_key, secret_key, region):
     if boto3 is None:
-        st.error("boto3 не установлен. Добавьте его в requirements.txt")
+        st.error(t("boto3_missing"))
         return None
     if not access_key or not secret_key:
-        st.warning("Введите Access Key ID и Secret Access Key.")
+        st.warning(t("enter_keys_warn"))
         return None
     return boto3.client(
         service,
@@ -77,20 +240,19 @@ def print_cname_records(identity, tokens):
     for i, token in enumerate(tokens, start=1):
         record_name = f"{token}._domainkey.{identity}"
         record_value = f"{token}.dkim.amazonses.com"
-        st.markdown(f"**Запись {i}:**")
-        st.code(f"Тип:      CNAME\nИмя:      {record_name}\nЗначение: {record_value}")
+        st.markdown(f"**{i}:**")
+        st.code(f"Type:  CNAME\nName:  {record_name}\nValue: {record_value}")
 
 
 def run_action(func):
-    """Обёртка для перехвата ошибок AWS и отображения их пользователю."""
     try:
         func()
     except NoCredentialsError:
-        st.error("Не удалось аутентифицироваться. Проверьте ключи.")
+        st.error(t("no_creds_error"))
     except ClientError as e:
-        st.error(f"AWS ошибка: {e.response['Error']['Code']} — {e.response['Error']['Message']}")
+        st.error(f"{t('aws_error')}: {e.response['Error']['Code']} — {e.response['Error']['Message']}")
     except Exception as e:
-        st.error(f"Ошибка: {e}")
+        st.error(f"{t('generic_error')}: {e}")
 
 
 # ---------- Main app ----------
@@ -98,54 +260,64 @@ def run_action(func):
 def main():
     st.set_page_config(page_title="AWS SES Manager", page_icon="📧", layout="centered")
 
-    st.title("📧 AWS SES Manager")
-    st.caption(
-        "Бесплатный инструмент для управления AWS SES. "
-        "Ваши AWS-ключи используются только в этой сессии браузера и нигде не сохраняются — "
-        "ни в коде приложения, ни на сервере. Не аффилирован с Amazon/AWS."
-    )
+    if "lang" not in st.session_state:
+        st.session_state["lang"] = "ru"
 
-    with st.expander("🔑 Учётные данные AWS", expanded=True):
-        access_key = st.text_input("Access Key ID", key="access_key")
-        secret_key = st.text_input("Secret Access Key", type="password", key="secret_key")
-        region = st.text_input("Регион", value="eu-west-1", key="region")
+    # Language switcher
+    col_lang, _ = st.columns([1, 4])
+    with col_lang:
+        lang_choice = st.selectbox(
+            "🌐", ["Русский", "English"],
+            index=0 if st.session_state["lang"] == "ru" else 1,
+            label_visibility="collapsed",
+        )
+    st.session_state["lang"] = "ru" if lang_choice == "Русский" else "en"
+
+    st.title(t("title"))
+    st.caption(t("subtitle"))
+
+    with st.expander(t("credentials_header"), expanded=True):
+        access_key = st.text_input(t("access_key"), key="access_key")
+        secret_key = st.text_input(t("secret_key"), type="password", key="secret_key")
+        default_index = next(
+            (i for i, l in enumerate(REGION_LABELS) if l.startswith("eu-west-1")), 0
+        )
+        region_label = st.selectbox(t("region"), REGION_LABELS, index=default_index)
+        region = REGION_CODE_BY_LABEL[region_label]
 
     tab1, tab2, tab3, tab4 = st.tabs([
-        "🔁 SMTP-пароль",
-        "🌐 Домены и email",
-        "🔍 CNAME / Статус",
-        "📊 Лимиты",
+        t("tab_smtp"), t("tab_domains"), t("tab_cname"), t("tab_limits"),
     ])
 
     # --- Tab 1: convert key to SMTP password ---
     with tab1:
-        st.subheader("Конвертировать текущий ключ в SMTP")
-        st.caption("Вычисляется локально, без обращения к AWS API.")
-        if st.button("Конвертировать", key="btn_convert"):
+        st.subheader(t("smtp_header"))
+        st.caption(t("smtp_caption"))
+        if st.button(t("convert_btn"), key="btn_convert"):
             if not access_key or not secret_key:
-                st.warning("Введите Access Key ID и Secret Access Key выше.")
+                st.warning(t("enter_keys_warn"))
             else:
                 smtp_password = calculate_smtp_password(secret_key, region)
-                st.success("Готово:")
+                st.success(t("done"))
                 st.code(
                     f"SMTP Username: {access_key}\n"
                     f"SMTP Password: {smtp_password}\n"
                     f"SMTP Endpoint: email-smtp.{region}.amazonaws.com\n"
-                    f"Порты: 587 (STARTTLS) или 465 (SSL)"
+                    f"Ports: 587 (STARTTLS) or 465 (SSL)"
                 )
 
     # --- Tab 2: domains and emails management ---
     with tab2:
-        st.subheader("Управление доменами и email")
-        identity = st.text_input("Email или домен", key="identity_input")
+        st.subheader(t("domains_header"))
+        identity = st.text_input(t("identity_label"), key="identity_input")
 
         col1, col2, col3 = st.columns(3)
 
         with col1:
-            if st.button("➕ Добавить", key="btn_add"):
+            if st.button(t("add_btn"), key="btn_add"):
                 def action():
                     if not identity:
-                        st.warning("Введите email или домен.")
+                        st.warning(t("enter_identity_warn"))
                         return
                     sesv2 = get_client("sesv2", access_key, secret_key, region)
                     if sesv2 is None:
@@ -153,31 +325,31 @@ def main():
                     response = sesv2.create_email_identity(EmailIdentity=identity)
                     is_domain = "@" not in identity
                     if is_domain:
-                        st.success("Домен добавлен. Добавьте следующие DNS-записи:")
+                        st.success(t("domain_added"))
                         tokens = response.get("DkimAttributes", {}).get("Tokens", [])
                         if tokens:
                             print_cname_records(identity, tokens)
                         else:
-                            st.info("Токены не пришли сразу — проверьте статус чуть позже.")
+                            st.info(t("tokens_delayed"))
                     else:
-                        st.success("Email добавлен. Проверьте почту и перейдите по ссылке подтверждения.")
+                        st.success(t("email_added"))
                 run_action(action)
 
         with col2:
-            if st.button("🗑 Удалить", key="btn_delete"):
+            if st.button(t("delete_btn"), key="btn_delete"):
                 def action():
                     if not identity:
-                        st.warning("Введите email или домен для удаления.")
+                        st.warning(t("enter_identity_delete_warn"))
                         return
                     sesv2 = get_client("sesv2", access_key, secret_key, region)
                     if sesv2 is None:
                         return
                     sesv2.delete_email_identity(EmailIdentity=identity)
-                    st.success(f"'{identity}' удалён из SES.")
+                    st.success(f"'{identity}' {t('deleted')}")
                 run_action(action)
 
         with col3:
-            if st.button("📋 Список всех", key="btn_list"):
+            if st.button(t("list_btn"), key="btn_list"):
                 def action():
                     sesv2 = get_client("sesv2", access_key, secret_key, region)
                     if sesv2 is None:
@@ -185,56 +357,54 @@ def main():
                     response = sesv2.list_email_identities()
                     identities = response.get("EmailIdentities", [])
                     if not identities:
-                        st.info("Ничего не привязано.")
+                        st.info(t("nothing_attached"))
                         return
                     domains = [i for i in identities if i.get("IdentityType") == "DOMAIN"]
                     emails = [i for i in identities if i.get("IdentityType") == "EMAIL_ADDRESS"]
 
-                    st.markdown(f"**🌐 Домены ({len(domains)}):**")
+                    st.markdown(f"**{t('domains_count')} ({len(domains)}):**")
                     for item in domains:
                         verified = item.get("VerificationStatus") == "SUCCESS"
                         st.write(f"{'✅' if verified else '❌'} {item.get('IdentityName')}")
 
-                    st.markdown(f"**📧 Email-адреса ({len(emails)}):**")
+                    st.markdown(f"**{t('emails_count')} ({len(emails)}):**")
                     for item in emails:
                         verified = item.get("VerificationStatus") == "SUCCESS"
                         st.write(f"{'✅' if verified else '❌'} {item.get('IdentityName')}")
                 run_action(action)
 
-        st.checkbox("Подтверждаю удаление (для кнопки 🗑 Удалить)", key="confirm_delete_note", help="AWS удаляет identity сразу без дополнительного окна подтверждения — проверьте адрес перед нажатием.")
-
     # --- Tab 3: CNAME records / verification status ---
     with tab3:
-        st.subheader("Статус верификации и CNAME-записи")
-        identity2 = st.text_input("Домен или email", key="identity_input2")
+        st.subheader(t("cname_header"))
+        identity2 = st.text_input(t("identity_label2"), key="identity_input2")
 
         col1, col2 = st.columns(2)
 
         with col1:
-            if st.button("✅ Проверить статус", key="btn_status"):
+            if st.button(t("check_status_btn"), key="btn_status"):
                 def action():
                     if not identity2:
-                        st.warning("Введите email или домен.")
+                        st.warning(t("enter_identity_warn"))
                         return
                     sesv2 = get_client("sesv2", access_key, secret_key, region)
                     if sesv2 is None:
                         return
                     response = sesv2.get_email_identity(EmailIdentity=identity2)
                     verified = response.get("VerifiedForSendingStatus")
-                    st.write(f"Верифицирован для отправки: {'✅ да' if verified else '❌ нет'}")
+                    st.write(f"{t('verified_sending')}: {'✅ ' + t('yes') if verified else '❌ ' + t('no')}")
                     dkim = response.get("DkimAttributes", {})
                     if dkim:
-                        st.write(f"DKIM статус: {dkim.get('Status')}")
+                        st.write(f"{t('dkim_status')}: {dkim.get('Status')}")
                 run_action(action)
 
         with col2:
-            if st.button("🔍 Показать CNAME", key="btn_cname"):
+            if st.button(t("show_cname_btn"), key="btn_cname"):
                 def action():
                     if not identity2:
-                        st.warning("Введите домен.")
+                        st.warning(t("enter_identity_warn"))
                         return
                     if "@" in identity2:
-                        st.warning("CNAME нужны только для доменов, не для email.")
+                        st.warning(t("cname_only_domains"))
                         return
                     sesv2 = get_client("sesv2", access_key, secret_key, region)
                     if sesv2 is None:
@@ -242,17 +412,17 @@ def main():
                     response = sesv2.get_email_identity(EmailIdentity=identity2)
                     dkim = response.get("DkimAttributes", {})
                     tokens = dkim.get("Tokens", [])
-                    st.write(f"DKIM статус: {dkim.get('Status', 'неизвестно')}")
+                    st.write(f"{t('dkim_status')}: {dkim.get('Status', '—')}")
                     if tokens:
                         print_cname_records(identity2, tokens)
                     else:
-                        st.info("Токены не найдены — сначала добавьте домен.")
+                        st.info(t("tokens_not_found"))
                 run_action(action)
 
     # --- Tab 4: limits and stats ---
     with tab4:
-        st.subheader("Лимиты и статистика отправки")
-        if st.button("📊 Обновить данные", key="btn_limits"):
+        st.subheader(t("limits_header"))
+        if st.button(t("update_btn"), key="btn_limits"):
             def action():
                 sesv2 = get_client("sesv2", access_key, secret_key, region)
                 if sesv2 is None:
@@ -264,21 +434,18 @@ def main():
                 remaining = max_24h - sent_24h
 
                 col1, col2, col3 = st.columns(3)
-                col1.metric("Лимит за 24ч", f"{max_24h:.0f}")
-                col2.metric("Отправлено", f"{sent_24h:.0f}")
-                col3.metric("Осталось", f"{remaining:.0f}")
+                col1.metric(t("limit_24h"), f"{max_24h:.0f}")
+                col2.metric(t("sent"), f"{sent_24h:.0f}")
+                col3.metric(t("remaining"), f"{remaining:.0f}")
 
-                st.write(f"Макс. скорость: {quota.get('MaxSendRate')} писем/сек")
-                st.write(f"Отправка включена: {'✅' if response.get('SendingEnabled') else '❌'}")
-                st.write(f"Production-режим: {'✅' if response.get('ProductionAccessEnabled') else '❌ (sandbox)'}")
+                st.write(f"{t('max_rate')}: {quota.get('MaxSendRate')} {t('per_sec')}")
+                st.write(f"{t('sending_enabled')}: {'✅' if response.get('SendingEnabled') else '❌'}")
+                production = response.get('ProductionAccessEnabled')
+                st.write(f"{t('production_mode')}: {'✅' if production else '❌ ' + t('sandbox')}")
             run_action(action)
 
     st.divider()
-    st.caption(
-        "⚠️ Неофициальный инструмент, не связан с Amazon Web Services. "
-        "Используя приложение, вы работаете со своим собственным AWS-аккаунтом на свой страх и риск. "
-        "Ключи не сохраняются и не логируются — они существуют только в памяти вашей текущей сессии."
-    )
+    st.caption(t("footer"))
 
 
 if __name__ == "__main__":
