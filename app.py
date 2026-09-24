@@ -127,6 +127,10 @@ TEXTS = {
         "tokens_not_found": "Токены не найдены — сначала добавьте домен.",
         "limits_header": "Лимиты и статистика отправки",
         "update_btn": "📊 Обновить данные",
+        "account_status": "Статус аккаунта",
+        "status_healthy": "Healthy — репутация в порядке",
+        "status_probation": "Probation — аккаунт под наблюдением, есть проблемы с репутацией",
+        "status_shutdown": "Shutdown — отправка приостановлена",
         "limit_24h": "Лимит за 24ч",
         "sent": "Отправлено",
         "remaining": "Осталось",
@@ -170,6 +174,7 @@ TEXTS = {
             "**Как это работает:**\n\n"
             "1. Нажмите «Обновить данные».\n\n"
             "Вы увидите:\n"
+            "- статус аккаунта (репутация): 🟢 Healthy — всё хорошо; 🟡 Probation — есть проблемы, аккаунт под наблюдением; 🔴 Shutdown — отправка остановлена AWS;\n"
             "- сколько писем можно отправить за 24 часа;\n"
             "- сколько уже отправлено;\n"
             "- сколько осталось;\n"
@@ -227,6 +232,10 @@ TEXTS = {
         "tokens_not_found": "Tokens not found — add the domain first.",
         "limits_header": "Sending limits and statistics",
         "update_btn": "📊 Refresh data",
+        "account_status": "Account status",
+        "status_healthy": "Healthy — no reputation issues",
+        "status_probation": "Probation — account under review for reputation issues",
+        "status_shutdown": "Shutdown — sending is paused",
         "limit_24h": "24h limit",
         "sent": "Sent",
         "remaining": "Remaining",
@@ -236,7 +245,7 @@ TEXTS = {
         "production_mode": "Production mode",
         "sandbox": "(sandbox)",
         "footer": (
-            "⚠️ Unofficial tool, not affiliated with Amazon Web Services. "
+            "⚠️ Unaffiliated tool, not affiliated with Amazon Web Services. "
             "By using this app you operate on your own AWS account at your own risk. "
             "Keys are never stored or logged — they exist only in your current session's memory."
         ),
@@ -270,6 +279,7 @@ TEXTS = {
             "**How it works:**\n\n"
             "1. Click Refresh data.\n\n"
             "You'll see:\n"
+            "- account (reputation) status: 🟢 Healthy — no issues; 🟡 Probation — under review for reputation issues; 🔴 Shutdown — sending paused by AWS;\n"
             "- how many emails you can send per 24 hours;\n"
             "- how many you've already sent;\n"
             "- how many remain;\n"
@@ -525,6 +535,27 @@ def main():
                 max_24h = quota.get("Max24HourSend", 0)
                 sent_24h = quota.get("SentLast24Hours", 0)
                 remaining = max_24h - sent_24h
+
+                # --- NEW: account reputation / enforcement status ---
+                # AWS returns one of: HEALTHY, PROBATION, SHUTDOWN
+                enforcement_status = response.get("EnforcementStatus", "")
+                status_map = {
+                    "HEALTHY": ("🟢", t("status_healthy"), "success"),
+                    "PROBATION": ("🟡", t("status_probation"), "warning"),
+                    "SHUTDOWN": ("🔴", t("status_shutdown"), "error"),
+                }
+                icon, label, kind = status_map.get(
+                    enforcement_status, ("⚪", enforcement_status or "—", "info")
+                )
+                status_line = f"{icon} **{t('account_status')}:** {label}"
+                if kind == "success":
+                    st.success(status_line)
+                elif kind == "warning":
+                    st.warning(status_line)
+                elif kind == "error":
+                    st.error(status_line)
+                else:
+                    st.info(status_line)
 
                 col1, col2, col3 = st.columns(3)
                 col1.metric(t("limit_24h"), f"{max_24h:.0f}")
